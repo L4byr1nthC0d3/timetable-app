@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 시간표 ㅁㅌㅊ?</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #a5b4fc;
+            --success-color: #22c55e;
+            --light-bg: #f9fafb;
+            --dark-text: #1e293b;
+            --light-text: #f8fafc;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --selected-gradient: linear-gradient(135deg, #6366f1, #a855f7);
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            padding-bottom: 2rem;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .app-header {
+            background: var(--primary-color);
+            color: var(--light-text);
+            padding: 2rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(167, 139, 250, 0.8));
+            z-index: 0;
+        }
+
+        .app-header h1 {
+            position: relative;
+            z-index: 1;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .app-header .emoji {
+            font-size: 2.5rem;
+            margin-right: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .time-slot {
+            height: 26px;
+            border-radius: 6px;
+            margin: 2px 0;
+            cursor: pointer;
+            text-align: center;
+            line-height: 26px;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 500;
+            user-select: none; /* 드래그 시 텍스트 선택 방지 */
+        }
+
+        .time-slot:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .time-slot.selected {
+            background: var(--selected-gradient);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        .day-card {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            border: none;
+            transition: transform 0.2s;
+            min-height: 100%;
+        }
+
+        .day-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .day-header {
+            padding: 1rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .day-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            border-color: #e2e8f0;
+            color: #475569;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        #result {
+            transition: all 0.3s ease;
+        }
+
+        .result-card {
+            border-radius: 12px;
+            background: white;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .result-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .result-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), transparent);
+        }
+
+        .result-body {
+            padding: 1.5rem;
+        }
+
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .result-emoji {
+            font-size: 3rem;
+            display: block;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .form-select {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border-color: #cbd5e1;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .cyber-select-container {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* 추가적인 레이아웃 개선 스타일 */
+        .time-container {
+            padding-right: 5px;
+        }
+
+        /* 반응형 디자인 개선 */
+        @media (max-width: 768px) {
+            .day-card {
+                margin-bottom: 1rem;
+            }
+            
+            .col-md-2 {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <div class="app-container my-4">
+            <div class="app-header">
+                <h1 class="mb-0"><span class="emoji">⏰</span> 내 시간표 ㅁㅌㅊ?</h1>
+            </div>
+
+            <div class="p-4">
+                <div id="timetable" class="row g-3"></div>
+
+                <div class="controls">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3 mb-md-0 text-center text-md-start">
+                            <div class="cyber-select-container">
+                                <label for="cyberSelect" class="form-label mb-0 me-3">
+                                    <i class="fas fa-laptop me-2"></i>사이버 강의 개수:
+                                </label>
+                                <select id="cyberSelect" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center text-md-end">
+                            <button onclick="calculateGrade()" class="btn btn-primary me-2 pulse-animation">
+                                <i class="fas fa-check-circle me-2"></i>결과 확인
+                            </button>
+                            <button onclick="clearAll()" class="btn btn-secondary">
+                                <i class="fas fa-trash-alt me-2"></i>전체 초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="result" class="mt-4"></div>
+            </div>
+        </div>
+        <div class="footer-note">
+            시간대를 클릭하거나 드래그하여 선택하세요. 당신의 시간표 점수를 확인해보세요!
+        </div>
+    </div>
+
+    <script>
+        const createTimeSlots = () => {
+            const slots = [];
+            for (let hour = 9; hour <= 21; hour++) {
+                for (let min = 0; min < 60; min += 30) {
+                    // 시간을 간결하게 표시 (09:00 → 9시)
+                    const time = `${hour}:${String(min).padStart(2, '0')}`;
+                    slots.push(time);
+                }
+            }
+            return slots;
+        }
+
+        const days = ['월', '화', '수', '목', '금', '토'];
+        const timetable = document.getElementById('timetable');
+        const timeSlots = createTimeSlots();
+        let isDragging = false;
+        let selectedSlots = {};
+
+        days.forEach(day => {
+            const colDiv = document.createElement('div');
+            colDiv.className = 'col-md-2 col-sm-4';
+            
+            const card = document.createElement('div');
+            card.className = 'day-card card h-100';
+            
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'day-header';
+            
+            const headerTitle = document.createElement('h5');
+            headerTitle.className = 'day-title';
+            headerTitle.innerHTML = `<i class="far fa-calendar-alt me-2"></i>${day}요일`;
+            
+            dayHeader.appendChild(headerTitle);
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body p-2';
+            
+            const timeContainer = document.createElement('div');
+            timeContainer.className = 'time-container';
+            // 텍스트 선택 방지 추가
+            timeContainer.style.webkitUserSelect = 'none';
+            timeContainer.style.mozUserSelect = 'none';
+            timeContainer.style.msUserSelect = 'none';
+            timeContainer.style.userSelect = 'none';
+            
+            timeSlots.forEach(time => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                // 원래 시간 형식(HH:MM)을 데이터셋에 저장
+                const [hour, min] = time.split(':');
+                const formattedTime = `${hour.padStart(2, '0')}:${min}`;
+                slot.dataset.time = formattedTime;
+                slot.dataset.day = day;
+                // 화면에는 간결하게 표시 (예: "9:30")
+                slot.textContent = time;
+
+                slot.addEventListener('mousedown', (e) => {
+                    // 텍스트 선택 방지
+                    e.preventDefault();
+                    isDragging = true;
+                    toggleSlot(slot);
+                });
+
+                slot.addEventListener('mouseenter', (e) => {
+                    // 텍스트 선택 방지
+                    e.preventDefault();
+                    if (isDragging) toggleSlot(slot);
+                });
+
+                timeContainer.appendChild(slot);
+            });
+            
+            cardBody.appendChild(timeContainer);
+            card.appendChild(dayHeader);
+            card.appendChild(cardBody);
+            colDiv.appendChild(card);
+            timetable.appendChild(colDiv);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            // 드래그 종료 시 텍스트 선택 상태 제거
+            window.getSelection().removeAllRanges();
+        });
+
+        function toggleSlot(slot) {
+            const key = `${slot.dataset.day}-${slot.dataset.time}`;
+            if (!selectedSlots[key]) {
+                slot.classList.add('selected');
+                selectedSlots[key] = true;
+            } else {
+                slot.classList.remove('selected');
+                delete selectedSlots[key];
+            }
+        }
+
+        function clearAll() {
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            selectedSlots = {};
+            document.getElementById('result').innerHTML = '';
+        }
+
+        function calculateGrade() {
+            let totalScore = 0;
+            const dayData = {};
+            let totalSlots = 0;
+            const timeValues = {};
+            timeSlots.forEach((time, index) => {
+                const [hour, min] = time.split(':').map(Number);
+                const paddedTime = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+                //시간별 점수 부여
+                if (hour < 12) {
+                    timeValues[paddedTime] = 1; // 09시-12시 : 1점
+                } else if (hour < 15) {
+                    timeValues[paddedTime] = 2; // 12시-15시 : 2점
+                } else {
+                    timeValues[paddedTime] = 3; // 15시-21시 : 3점
+                }
+            });
+
+            days.forEach(day => {
+                const slots = [...document.querySelectorAll(`.time-slot[data-day="${day}"].selected`)];
+                dayData[day] = slots.map(slot => ({
+                    time: slot.dataset.time,
+                    value: timeValues[slot.dataset.time] || 0
+                }));
+                totalSlots += slots.length;
+            });
+
+            const calculateBlockScore = (block) => {
+                let score = 0;
+                score = block.length - 1;
+                return score;
+            }
+            const calculateGapScore = (day, prevTime, currentTime) => {
+                const [ph, pm] = prevTime.split(':').map(Number);
+                const [ch, cm] = currentTime.split(':').map(Number);
+                const prevMinute = ph * 60 + pm;
+                const currentMinute = ch * 60 + cm;
+                const diff = currentMinute - prevMinute;
+
+                let gap = 0;
+                if (day === '화' || day === '목') {
+                  if (diff >= 90) {
+                      gap = diff/30 -2;
+                  }
+                } else{
+                    if (diff >= 60) {
+                        gap = diff / 30 -1;
+                    }
+                }
+                return gap < 0 ? 0 : gap;
+            };
+
+            Object.entries(dayData).forEach(([day, times]) => {
+                if ((day === '월' || day === '금') && times.length === 0) {
+                    totalScore += 10;
+                }
+                times.sort((a, b) => a.time.localeCompare(b.time)).forEach(({ time, value }, index, arr) => {
+                    totalScore += value;
+                    if (index > 0) {
+                        const prevTime = arr[index - 1].time;
+                        if (areConsecutive(prevTime, time, day)) {
+                            totalScore += calculateBlockScore([prevTime,time]);
+                        } else {
+                          totalScore -= calculateGapScore(day, prevTime, time);
+                        }
+                    }
+                });
+            });
+
+            const cyberCount = parseInt(document.getElementById('cyberSelect').value);
+            let cyberBonus = 0;
+            if (cyberCount > 0) {
+                cyberBonus = Math.pow(2, cyberCount + 1);
+            }
+            totalScore += cyberBonus;
+
+            const averageScore = totalSlots > 0
+                ? (totalScore / totalSlots).toFixed(1)
+                : 0;
+
+            const gradeSystem = [
+                { score: 3, text: 'ㅆㅅㅌㅊ', color: '#8b5cf6', emoji: '👑' },
+                { score: 2.5, text: 'ㅅㅌㅊ', color: '#3b82f6', emoji: '🌟' },
+                { score: 2, text: 'ㅈㅌㅊㅊ', color: '#10b981', emoji: '💡' },
+                { score: 1.5, text: 'ㅎㅌㅊ', color: '#f59e0b', emoji: '☕' },
+                { score: 0, text: 'ㅈㅈ', color: '#ef4444', emoji: '🔥' }
+            ];
+
+            const result = gradeSystem.find(r => averageScore >= r.score) || gradeSystem[4];
+            
+            document.getElementById('result').innerHTML = `
+            <div class="result-card">
+                <div class="result-header" style="background: ${result.color}">
+                    <h2 class="mb-0 text-center">${result.emoji} ${result.text}</h2>
+                </div>
+                <div class="result-body">
+                    <div class="result-emoji">${result.emoji}</div>
+                    <div class="score-display">${averageScore}점</div>
+                    <div class="score-details text-center">
+                        <p>총 ${totalSlots}개 시간대 선택 / 총점 ${totalScore}점</p>
+                        <p class="mb-0">사이버 강의 보너스: +${cyberBonus}점</p>
+                    </div>
+                </div>
+            </div>
+            `;
+            
+            // 결과 섹션으로 부드럽게 스크롤
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function areConsecutive(time1, time2, day) {
+            const [h1, m1] = time1.split(':').map(Number);
+            const [h2, m2] = time2.split(':').map(Number);
+            const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (day === '화' || day === '목') {
+              return diff === 90;
+            } else{
+              return diff === 60 || diff === 30;
+            }
+        }
+
+        // 페이지 로드 시 애니메이션 효과
+        document.addEventListener('DOMContentLoaded', function() {
+            const dayCards = document.querySelectorAll('.day-card');
+            dayCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, 100 * index);
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
